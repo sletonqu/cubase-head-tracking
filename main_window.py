@@ -26,6 +26,7 @@ MODELS_WITH_DESCRIPTION: List[Tuple[int, str]] = [
 ]
 """The models that the OpenSeeFace face tracker provides"""
 
+
 class GetCamerasSignals(QObject):
     """The signals that may be emitted by the GetCamerasWorker runnable."""
 
@@ -37,6 +38,7 @@ class GetCamerasSignals(QObject):
     """Emitted upon successfully obtaining cameras, returns a list of
     tuples in (id, name) format"""
 
+
 class GetCamerasWorker(QRunnable):
     """Runs the face tracker script and parse's it's output to get the
     available cameras."""
@@ -46,12 +48,12 @@ class GetCamerasWorker(QRunnable):
     @pyqtSlot()
     def run(self):
         completed_process = subprocess.run([FACETRACKER_BINARY, "-l", "1"],
-            capture_output=True, encoding=sys.stdout.encoding)
+                                           capture_output=True, encoding=sys.stdout.encoding)
 
         if completed_process.returncode != 0:
             self.signals.error.emit(f"Error running process (returncode {completed_process.returncode})")
             return
-        
+
         camera_regexp = re.compile("^(\d+): (.+)$")
         cameras = list()
 
@@ -64,8 +66,9 @@ class GetCamerasWorker(QRunnable):
                     cameras.append((int(matches.group(1)), matches.group(2)))
                 except:
                     pass
-        
+
         self.signals.result.emit(cameras)
+
 
 class FaceTrackingSignals(QObject):
     """QObject containing every signal that FaceTrackingThead might emit"""
@@ -88,7 +91,7 @@ class FaceTrackingThread(QThread):
     model = 1
     camera_id = 0
     visualize = False
-    port = 7600
+    port = 7000
     pitch_offset = 0.0
     yaw_offset = 0.0
     roll_offset = 0.0
@@ -106,38 +109,52 @@ class FaceTrackingThread(QThread):
         # Start the process
         self._should_run = True
         face_tracking_process_args = [FACETRACKER_BINARY,
-            "-c", str(self.camera_id),
-            "-m", str(self.model),
-            "-p", str(face_tracker_port)]
+                                      "-c", str(self.camera_id),
+                                      "-m", str(self.model),
+                                      "-p", str(face_tracker_port)]
 
-        if (self.visualize):
+        if self.visualize:
             face_tracking_process_args.append("-v")
             face_tracking_process_args.append("1")
 
         face_tracking_process: subprocess.Popen = subprocess.Popen(face_tracking_process_args)
         osc_client = pythonosc.udp_client.SimpleUDPClient("127.0.0.1", self.port)
-        while(self._should_run):
+
+        osc_rate_divider = 1
+        osc_rnd = 0
+
+        while self._should_run:
             ready = select.select([sock], [], [], 5.0)
             buf = b''
-            if (ready[0]):
-                while(len(buf) < PACKET_SIZE):
+            if ready[0]:
+                while len(buf) < PACKET_SIZE:
                     newdata, addr = sock.recvfrom(PACKET_SIZE)
-                    if (len(newdata) == 0):
+                    if len(newdata) == 0:
                         # Data packet was not complete, discard
                         break
                     buf += newdata
             else:
                 continue
-
-            if (len(buf) < PACKET_SIZE):
+            if len(buf) < PACKET_SIZE:
                 # Incomplete packet, discard
                 continue
 
             parsed = parse_open_see_data(buf)
             self.signals.tracking.emit(parsed.rotation)
-            osc_client.send_message("/SceneRotator/pitch", parsed.rotation.x + self.pitch_offset)
-            osc_client.send_message("/SceneRotator/yaw", parsed.rotation.y + self.yaw_offset)
-            osc_client.send_message("/SceneRotator/roll", parsed.rotation.z + self.roll_offset)
+
+            # OSC Head Pose Protocol compatible with Cubase head tracking compagnion
+            userid = 0
+            x = 0.0
+            y = 0.0
+            z = 0.0
+            pitch = parsed.rotation.x + self.pitch_offset
+            yaw = parsed.rotation.y + self.yaw_offset
+            roll = parsed.rotation.z + self.roll_offset
+            if osc_rnd >= osc_rate_divider:
+                osc_client.send_message("/head_pose", [userid, x, y, z, pitch, yaw, roll])
+                osc_rnd = 0
+            else:
+                osc_rnd += 1
 
         face_tracking_process.terminate()
         self._should_run = False
@@ -210,8 +227,6 @@ class MainWindow(QMainWindow):
     """The last detected roation. None if there hasn't been any detection
     performed."""
 
-
-
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
 
@@ -249,7 +264,7 @@ class MainWindow(QMainWindow):
         row2.addWidget(port_label)
 
         self.port_text_box = QLineEdit()
-        self.port_text_box.setText("7600")
+        self.port_text_box.setText("7000")
         self.port_text_box.setInputMask("90000")
         row2.addWidget(self.port_text_box)
 
@@ -363,7 +378,7 @@ class MainWindow(QMainWindow):
         widget = QWidget()
         widget.setLayout(self.layout)
         self.setCentralWidget(widget)
-    
+
     @pyqtSlot()
     def on_use_current_rotation_as_zero_clicked(self):
         if (self.last_detected_rotation is not None):
@@ -419,7 +434,7 @@ class MainWindow(QMainWindow):
         self.offset_roll_label.setText(f"Roll: {converted:.2f}")
         if (self.face_tracking_thread is not None):
             self.face_tracking_thread.set_roll_offset(converted)
-    
+
     @pyqtSlot()
     def on_face_tracking_thread_stopped(self):
         self.set_enabled_on_tracking_related_params(True)
@@ -441,4 +456,3 @@ class MainWindow(QMainWindow):
         self.current_yaw_label.setText(f"Yaw: {rotation[1]:.2f}")
         self.current_roll_dial.setValue(int(rotation[2] * 10))
         self.current_roll_label.setText(f"Roll: {rotation[2]:.2f}")
-
