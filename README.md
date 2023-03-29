@@ -1,4 +1,4 @@
-Cubase Head Tracking
+Head Tracking Companion for Cubase
 =============================
 
 A webcam face tracker that generates OSC messages to run with Cubase DAW head tracking system.
