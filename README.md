@@ -1,5 +1,8 @@
-The Experience webcam tracker
+Cubase Head Tracking
 =============================
 
-A webcam face tracker that generates OSC messages to run Dore Mark's
-"The Experience - Fazioli F308" Player VR perspective.
+A webcam face tracker that generates OSC messages to run with Cubase DAW head tracking system.
+
+This project is currently under development and testing
+
+This is a fork of blah1898/the-experience-face-tracker project.
