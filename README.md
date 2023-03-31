@@ -1,4 +1,4 @@
-Cubase Head Tracking Companion (CHTC)
+Cubase Head Tracking Companion
 =============================
 
 A webcam face tracker that generates OSC messages to run with Cubase DAW head tracking system.
