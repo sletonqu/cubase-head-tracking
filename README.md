@@ -9,8 +9,6 @@ This is a fork of blah1898/the-experience-face-tracker project.
 
 
 
-Requirements: PyQt5 and python-osc
+Requirements: Python3 with PyQt5 and python-osc
 
-pip install PyQt5
-
-pip install python-osc
+pip install -r requirements.txt
