@@ -71,10 +71,10 @@ class GetCamerasWorker(QRunnable):
 
 
 class FaceTrackingSignals(QObject):
-    """QObject containing every signal that FaceTrackingThead might emit"""
+    """QObject containing every signal that FaceTrackingThread might emit"""
 
     error = pyqtSignal(str)
-    """Emitted whenever an error ocurrs during face tracking, emits a
+    """Emitted whenever an error occurrs during face tracking, emits a
     message with the error"""
 
     tracking = pyqtSignal(tuple)
@@ -142,7 +142,7 @@ class FaceTrackingThread(QThread):
             parsed = parse_open_see_data(buf)
             self.signals.tracking.emit(parsed.rotation)
 
-            # OSC Head Pose Protocol compatible with Cubase head tracking compagnion
+            # OSC Head Pose Protocol compatible with Cubase head tracking companion
             userid = 0
             x = 0.0
             y = 0.0
@@ -224,7 +224,7 @@ class MainWindow(QMainWindow):
     face_tracking_thread: Optional[FaceTrackingThread] = None
     """The thread in charge of face tracking."""
     last_detected_rotation: Optional[Tuple[float, float, float]] = None
-    """The last detected roation. None if there hasn't been any detection
+    """The last detected rotation. None if there hasn't been any detection
     performed."""
 
     def __init__(self, *args, **kwargs):
@@ -381,7 +381,7 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot()
     def on_use_current_rotation_as_zero_clicked(self):
-        if (self.last_detected_rotation is not None):
+        if self.last_detected_rotation is not None:
             self.offset_pitch_dial.setValue(-int(self.last_detected_rotation[0] * 10))
             self.offset_yaw_dial.setValue(-int(self.last_detected_rotation[1] * 10))
             self.offset_roll_dial.setValue(-int(self.last_detected_rotation[2] * 10))
@@ -418,21 +418,21 @@ class MainWindow(QMainWindow):
     def on_offset_pitch_changed(self, new_value: int):
         converted = float(new_value) / 10
         self.offset_pitch_label.setText(f"Pitch: {converted:.2f}")
-        if (self.face_tracking_thread is not None):
+        if self.face_tracking_thread is not None:
             self.face_tracking_thread.set_pitch_offset(converted)
 
     @pyqtSlot(int)
     def on_offset_yaw_changed(self, new_value: int):
         converted = float(new_value) / 10
         self.offset_yaw_label.setText(f"Yaw: {converted:.2f}")
-        if (self.face_tracking_thread is not None):
+        if self.face_tracking_thread is not None:
             self.face_tracking_thread.set_yaw_offset(converted)
 
     @pyqtSlot(int)
     def on_offset_roll_changed(self, new_value: int):
         converted = float(new_value) / 10
         self.offset_roll_label.setText(f"Roll: {converted:.2f}")
-        if (self.face_tracking_thread is not None):
+        if self.face_tracking_thread is not None:
             self.face_tracking_thread.set_roll_offset(converted)
 
     @pyqtSlot()

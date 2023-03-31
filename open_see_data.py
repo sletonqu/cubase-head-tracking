@@ -9,14 +9,17 @@ import struct
 
 NUMBER_OF_POINTS = 68
 
+
 class Vector2(NamedTuple):
     x: float
     y: float
+
 
 class Vector3(NamedTuple):
     x: float
     y: float
     z: float
+
 
 class Quaternion(NamedTuple):
     w: float
@@ -24,14 +27,15 @@ class Quaternion(NamedTuple):
     y: float
     z: float
 
+
 @dataclass(frozen=True)
 class OpenSeeFeatures:
     eye_left: float
-    """Indicates wether the left eye is opened (0) or closed (-1). A value of 1
+    """Indicates whether the left eye is opened (0) or closed (-1). A value of 1
     means open wider than normal."""
 
     eye_right: float
-    """Indicates wether the right eye is opened (0) or closed (-1). A value of
+    """Indicates whether the right eye is opened (0) or closed (-1). A value of
     1 means open wider than normal."""
 
     eyebrow_steepness_left: float
@@ -94,7 +98,7 @@ class OpenSeeData:
     order of first detection and location of the faces. """
 
     camera_resolution: Vector2
-    """The resolution of the cmaera of video being tracked."""
+    """The resolution of the camera of video being tracked."""
 
     right_eye_open: float
     """How likely it is that the right eye is open."""
@@ -124,7 +128,7 @@ class OpenSeeData:
         pose. Rotation is pitch, yaw, roll."""
         x = -self.euler.x + 180 % 360
         z = self.euler.z - 90
-        if (x > 180):
+        if x > 180:
             x = x - 360
         return Vector3(x, self.euler.y, z)
 
@@ -153,6 +157,7 @@ class OpenSeeData:
 
     open_see_features: OpenSeeFeatures
     """The facial features provided by the face tracker"""
+
 
 def parse_open_see_data(packet: bytes) -> OpenSeeData:
     offset = 0
@@ -218,14 +223,13 @@ def parse_open_see_data(packet: bytes) -> OpenSeeData:
     (mouth_wide,) = struct.unpack_from("f", packet, offset)
 
     features = OpenSeeFeatures(eye_left, eye_right, eyebrow_steepness_left,
-        eyebrow_up_down_left, eyebrow_quirk_left, eyebrow_steepness_right,
-        eyebrow_up_down_right, eyebrow_quirk_right, mouth_corner_up_down_left,
-        mouth_corner_in_out_left, mouth_corner_up_down_right,
-        mouth_corner_in_out_right, mouth_open, mouth_wide)
-    
+                               eyebrow_up_down_left, eyebrow_quirk_left, eyebrow_steepness_right,
+                               eyebrow_up_down_right, eyebrow_quirk_right, mouth_corner_up_down_left,
+                               mouth_corner_in_out_left, mouth_corner_up_down_right,
+                               mouth_corner_in_out_right, mouth_open, mouth_wide)
+
     data = OpenSeeData(time, id, camera_resolution, right_eye_open,
-        left_eye_open, got_3d_points, fit_3d_error, translation,
-        quaternion, euler, confidence, points, points3d, features)
+                       left_eye_open, got_3d_points, fit_3d_error, translation,
+                       quaternion, euler, confidence, points, points3d, features)
 
     return data
-
