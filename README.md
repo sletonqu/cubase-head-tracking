@@ -12,3 +12,5 @@ This is a fork of blah1898/the-experience-face-tracker project.
 Requirements: Python3 with PyQt5 and python-osc
 
 Execute "python -m pip install -r requirements.txt" command to install modules.
+
+Note: OpenSeeFace not compatible with MacOS.
